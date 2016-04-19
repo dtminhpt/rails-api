@@ -3,6 +3,7 @@
   include ActionController::HttpAuthentication::Basic::ControllerMethods
   include ActionController::HttpAuthentication::Token::ControllerMethods
 
+  before_filter: authenticate_user_from_token, except: [:token]
   def default_serializer_options
     { root: false }
   end 
@@ -16,5 +17,12 @@
         render json: { error: 'Incorrect credentials' }, status: 401 
       end 
     end
+  end 
+
+  private
+  def authenticate_user_from_token
+    unless authenticate_with_http_token { |token, options| User.find_by(auth_token: token) }
+      render json: { error: 'Bad Token'}, status: 401
+    end 
   end 
 end
